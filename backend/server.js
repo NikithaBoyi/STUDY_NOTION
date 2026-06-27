@@ -1,65 +1,62 @@
-const express = require('express')
+// server.js
+
+require('dotenv').config(); // Load environment variables first
+const express = require('express');
 const app = express();
 
-// packages
+// Packages
 const fileUpload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-require('dotenv').config();
 
-// connection to DB and cloudinary
-const { connectDB } = require('./config/database');
-const { cloudinaryConnect } = require('./config/cloudinary');
+// Connections
+const { connectDB } = require('./config/database'); // MongoDB connection
+const { cloudinaryConnect } = require('./config/cloudinary'); // Cloudinary connection
 
-// routes
+// Routes
 const userRoutes = require('./routes/user');
 const profileRoutes = require('./routes/profile');
 const paymentRoutes = require('./routes/payments');
 const courseRoutes = require('./routes/course');
 
-
-// middleware 
-app.use(express.json()); // to parse json body
+// Middleware
+app.use(express.json()); // parse JSON body
 app.use(cookieParser());
-app.use(
-    cors({
-        // origin: 'http://localhost:5173', // frontend link
-        origin: "*",
-        credentials: true
-    })
-);
-app.use(
-    fileUpload({
-        useTempFiles: true,
-        tempFileDir: '/tmp'
-    })
-)
 
+// CORS
+app.use(cors({
+    origin: process.env.FRONTEND_URL || '*',
+    credentials: true
+}));
 
-const PORT = process.env.PORT || 5000;
+// File upload middleware
+app.use(fileUpload({
+    useTempFiles: true,
+    tempFileDir: '/tmp'
+}));
 
-app.listen(PORT, () => {
-    console.log(`Server Started on PORT ${PORT}`);
-});
+// Connect to MongoDB
+connectDB(); // reads connection string from .env and connects
 
-// connections
-connectDB();
+// Connect to Cloudinary
 cloudinaryConnect();
 
-// mount route
+// Mount routes
 app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/profile', profileRoutes);
 app.use('/api/v1/payment', paymentRoutes);
 app.use('/api/v1/course', courseRoutes);
 
-
-
-
-// Default Route
+// Default route
 app.get('/', (req, res) => {
-    // console.log('Your server is up and running..!');
-    res.send(`<div>
-    This is Default Route  
-    <p>Everything is OK</p>
+    res.send(`<div style="text-align:center; font-family:sans-serif;">
+        <h2>Backend Server is Running!</h2>
+        <p>Everything is OK ✅</p>
     </div>`);
-})
+});
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server started on PORT ${PORT}`);
+});
